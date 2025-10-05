@@ -1,0 +1,17 @@
+# syntax=docker/dockerfile:1
+FROM maven:3.9.9-eclipse-temurin-17
+
+# ルートは /app、実作業は guidebox-backend 配下
+WORKDIR /app/guidebox-backend
+
+# 依存だけ先取り（オフライン化）して dev 起動を高速化
+# ※ ソースは compose でマウントするので pom.xml のみコピー
+COPY guidebox-backend/pom.xml ./pom.xml
+RUN --mount=type=cache,target=/root/.m2 mvn -q -B dependency:go-offline
+
+# Spring の dev プロファイルで動かす前提
+ENV SPRING_PROFILES_ACTIVE=dev
+EXPOSE 8080
+
+# ホットリロード実行（spring-boot:run）
+CMD ["mvn", "-q", "-B", "spring-boot:run"]

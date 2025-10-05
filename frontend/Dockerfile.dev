@@ -1,0 +1,25 @@
+# syntax=docker/dockerfile:1
+
+# Node公式の軽量イメージ
+FROM node:22-slim
+
+# 作業ディレクトリ
+WORKDIR /app
+
+# 依存だけ先に入れてビルドを速くする（lockがあれば npm ci を使う）
+# ※ ソース本体は compose でマウントするので COPY しない
+COPY package.json package-lock.json* ./
+
+# npm キャッシュを使って依存導入を高速化（BuildKit有効時）
+RUN --mount=type=cache,target=/root/.npm \
+  bash -lc 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+
+# Next の開発サーバをデフォルトコマンドに
+ENV WATCHPACK_POLLING=true \
+  NEXT_TELEMETRY_DISABLED=1
+EXPOSE 3000
+
+RUN npm install -D @types/modules
+
+# ホットリロード実行
+CMD ["npm", "run", "dev"]

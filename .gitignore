@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# frontend
+.next/
+out/
+node_modules/
+
+# node.jsのパッケージ管理ツールasdfの設定ファイルのため除外
+.tool-versions
+
+# backend
+/target/
+*.class
+pom-template.xml
+
+
+# vscode
+.vscode
+
+# eclipse
+.metadata/
+.settings/
+.classpath
+.project

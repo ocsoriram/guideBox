@@ -1,0 +1,53 @@
+version: "3.8"
+name: guideBox
+
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Next.js からバックエンドへ到達するためのベースURL（Docker内部名 backend:8080）
+      NEXT_PUBLIC_API_BASE_URL: http://backend:8080
+      NODE_ENV: production
+    depends_on:
+      - backend
+    networks: [appnet]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # フロントからのCORSを許可（最小構成: localhost:3000）
+      # FIXME 本番で修正すること
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      SPRING_PROFILES_ACTIVE: docker
+    networks: [appnet]
+
+# FIXME USERとPWを変更する
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    # Helloでは未使用のためprofilesとして設定(自動起動しない。cloudDBを使うため)
+    # 必要なら "docker compose --profile db up" で起動できる
+    profiles: ["db"]
+    networks: [appnet]
+
+networks:
+  appnet:
+
+volumes:
+  db-data:

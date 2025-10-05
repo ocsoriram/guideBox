@@ -1,0 +1,56 @@
+# docker-compose.dev.yml
+name: guideBoxDev
+
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+      NODE_ENV: development
+      WATCHPACK_POLLING: "true"         # ポーリング方式(定期チェック)で変更検知
+      NEXT_TELEMETRY_DISABLED: "1"      # テレメトリ(匿名情報)の送信を無効化
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks: [appnet]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    working_dir: /app/guidebox-backend
+    command: mvn -q -B spring-boot:run
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev             # application-dev.ymlを使用
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+    volumes:
+      - ./backend:/app
+      - ~/.m2:/root/.m2
+    networks: [appnet]
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks: [appnet]
+
+networks:
+  appnet:
+
+volumes:
+  db-data:
