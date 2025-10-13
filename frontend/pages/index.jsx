@@ -21,7 +21,7 @@ export default function Home() {
       }
     };
     fetchGreeting();
-  }, [apiBase]);
+  }, []);
 
   return (
     <main style={{ fontFamily: "system-ui", padding: 24 }}>
