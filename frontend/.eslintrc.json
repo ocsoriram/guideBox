@@ -1,0 +1,18 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "airbnb",
+    "plugin:prettier/recommended"
+  ],
+  "plugins": ["react", "prettier"],
+  "rules": {
+    "prettier/prettier": "error",   // Prettierの違反をエラーにする
+    "react/react-in-jsx-scope": "off" // React 17以降は不要
+  },
+  "settings": {
+    "react": {
+      "version": "detect" // Reactのバージョンを自動検出
+    }
+  }
+}
