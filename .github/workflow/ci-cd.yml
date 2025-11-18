@@ -1,0 +1,83 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - fix/** # fixブランチ系がプッシュされたら実行
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build & Test Applications
+    runs-on: ubuntu-latest
+    
+    # データベースサービスが必要なため、Docker Composeで環境を構築
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: appdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # --- 1. バックエンド (Spring Boot / Maven) のビルドとテスト ---
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          
+      - name: Build and Test Backend
+        working-directory: ./backend/guidebox-backend
+        # バックエンドのDockerfile.devに書かれているbuildコマンドに近い形にする
+        # テスト実行を含め、パッケージングする
+        run: mvn clean install -DskipTests
+        # データベース接続が必要なテストは、ここで実行するために
+        # -DskipTestsを削除するか、個別にテストコマンドを実行する必要があります。
+        # ここでは環境構築の容易さのため、一旦テストをスキップしてビルドが通るかを確認します。
+
+      # --- 2. フロントエンド (Next.js / Node.js) のビルドとテスト ---
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json' # キャッシュ対象ファイルを指定
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci # npm installよりもクリーンなインストール方法
+
+      - name: Run Frontend Tests (Placeholder)
+        working-directory: ./frontend
+        # JestやTesting Libraryなどでのテスト実行コマンドに置き換えてください
+        # run: npm test
+
+      - name: Build Frontend Application
+        working-directory: ./frontend
+        # ビルドが通るかを確認 (環境変数NEXT_PUBLIC_API_BASE_URLはビルド時には不要)
+        run: npm run build
+        env:
+          NODE_ENV: production
+          
+      # --- 3. デプロイステップ (省略) ---
+      # デプロイが必要な場合は、ここにFirebase Hostingやその他のデプロイコマンドを追加します
+      # 例:
+      # - name: Deploy to Firebase Hosting (Placeholder)
+      #   uses: FirebaseExtended/action-hosting-deploy@v0
+      #   ...
