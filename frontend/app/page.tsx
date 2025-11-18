@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -7,6 +9,7 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // FIXME jsxをtsxで書けるように修正する
   // 初回アクセス時にバックエンド(NEXT_PUBLIC_API_BASE_URL)から値を取得してmessageに格納
   useEffect(() => {
     const fetchGreeting = async () => {
